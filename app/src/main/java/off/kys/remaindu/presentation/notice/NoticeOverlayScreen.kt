@@ -3,9 +3,13 @@ package off.kys.remaindu.presentation.notice
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
@@ -66,12 +70,24 @@ fun NoticeOverlayScreen(
         visible = state.isVisible,
         enter = slideInVertically(
             initialOffsetY = { -it },
-            animationSpec = tween(220)
-        ) + fadeIn(tween(160)),
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + expandVertically(
+            expandFrom = Alignment.Top,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + fadeIn(tween(200)),
         exit = slideOutVertically(
             targetOffsetY = { -it },
-            animationSpec = tween(160)
-        ) + fadeOut(tween(120))
+            animationSpec = spring(stiffness = Spring.StiffnessMedium)
+        ) + shrinkVertically(
+            shrinkTowards = Alignment.Top,
+            animationSpec = spring(stiffness = Spring.StiffnessMedium)
+        ) + fadeOut(tween(150))
     ) {
         val dragOffsetY = remember { Animatable(0f) }
 
