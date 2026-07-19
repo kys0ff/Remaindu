@@ -47,7 +47,9 @@ class HomeScreenModel(
 
     override fun onEvent(event: HomeEvent) = when (event) {
         is HomeEvent.AcknowledgeNotice -> acknowledge(event.notice)
+        is HomeEvent.RequestDeleteNotice -> updateState { it.copy(noticeToDelete = event.notice) }
         is HomeEvent.DeleteNotice -> delete(event.notice)
+        HomeEvent.DismissDeleteConfirmation -> updateState { it.copy(noticeToDelete = null) }
         is HomeEvent.CheckPermissions -> checkPermissions(event.context)
     }
 
@@ -73,6 +75,9 @@ class HomeScreenModel(
     }
 
     private fun delete(notice: Notice) {
-        screenModelScope.launch { useCases.deleteNotice(notice.id) }
+        screenModelScope.launch {
+            useCases.deleteNotice(notice.id)
+            updateState { it.copy(noticeToDelete = null) }
+        }
     }
 }

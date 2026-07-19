@@ -46,9 +46,10 @@ import off.kys.remaindu.presentation.components.RepetitionSelector
 import org.koin.core.parameter.parametersOf
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.core.tween
+import off.kys.remaindu.util.SmoothDuration
 import off.kys.remaindu.util.bounceClick
 
 class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
@@ -100,7 +101,7 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
             ) {
                 AnimatedVisibility(
                     visible = true,
-                    enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 2 }
+                    enter = fadeIn(tween(SmoothDuration)) + slideInVertically(tween(SmoothDuration)) { it / 2 }
                 ) {
                     SectionCard(
                         icon = painterResource(R.drawable.round_title_24),
@@ -128,7 +129,7 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
 
                 AnimatedVisibility(
                     visible = true,
-                    enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 2 }
+                    enter = fadeIn(tween(SmoothDuration)) + slideInVertically(tween(SmoothDuration)) { it / 2 }
                 ) {
                     SectionCard(
                         icon = painterResource(R.drawable.round_repeat_24),

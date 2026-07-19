@@ -10,6 +10,9 @@ import cafe.adriel.voyager.transitions.SlideTransition
 import off.kys.remaindu.presentation.screen.home.HomeScreen
 import off.kys.remaindu.presentation.theme.RemainduTheme
 
+import androidx.compose.animation.core.tween
+import off.kys.remaindu.util.SmoothDuration
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
@@ -18,7 +21,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             RemainduTheme {
                 Navigator(screen = HomeScreen()) { navigator ->
-                    SlideTransition(navigator)
+                    SlideTransition(
+                        navigator = navigator,
+                        animationSpec = tween(SmoothDuration)
+                    )
                 }
             }
         }

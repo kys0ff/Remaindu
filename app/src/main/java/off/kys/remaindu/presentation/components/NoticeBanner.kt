@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import off.kys.remaindu.R
 import off.kys.remaindu.domain.model.Notice
-
+import off.kys.remaindu.util.FastDuration
 import off.kys.remaindu.util.bounceClick
 
 @Composable
@@ -44,8 +44,8 @@ fun NoticeBanner(
 ) {
     AnimatedVisibility(
         visible = true,
-        enter = slideInVertically(animationSpec = tween(200)) { -it / 2 } + fadeIn(tween(150)),
-        exit = shrinkVertically(animationSpec = tween(150)) + fadeOut(tween(120))
+        enter = slideInVertically(animationSpec = tween(FastDuration)) { -it / 2 } + fadeIn(tween(FastDuration)),
+        exit = shrinkVertically(animationSpec = tween(FastDuration)) + fadeOut(tween(FastDuration))
     ) {
         ElevatedCard(
             modifier = modifier
