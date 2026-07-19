@@ -45,6 +45,12 @@ import off.kys.remaindu.domain.model.RepetitionType
 import off.kys.remaindu.presentation.components.RepetitionSelector
 import org.koin.core.parameter.parametersOf
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import off.kys.remaindu.util.bounceClick
+
 class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -92,77 +98,87 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
                     .imePadding(),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                SectionCard(
-                    icon = painterResource(R.drawable.round_title_24),
-                    title = "Details"
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(400)) + slideInVertically(tween(400)) { it / 2 }
                 ) {
-                    OutlinedTextField(
-                        value = state.title,
-                        onValueChange = { screenModel.onEvent(CreateNoticeEvent.TitleChanged(it)) },
-                        label = { Text("Title") },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        shape = MaterialTheme.shapes.medium
-                    )
+                    SectionCard(
+                        icon = painterResource(R.drawable.round_title_24),
+                        title = "Details"
+                    ) {
+                        OutlinedTextField(
+                            value = state.title,
+                            onValueChange = { screenModel.onEvent(CreateNoticeEvent.TitleChanged(it)) },
+                            label = { Text("Title") },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            shape = MaterialTheme.shapes.medium
+                        )
 
-                    OutlinedTextField(
-                        value = state.message,
-                        onValueChange = { screenModel.onEvent(CreateNoticeEvent.MessageChanged(it)) },
-                        label = { Text("What do you want to remember?") },
-                        modifier = Modifier.fillMaxWidth(),
-                        minLines = 3,
-                        shape = MaterialTheme.shapes.medium
-                    )
+                        OutlinedTextField(
+                            value = state.message,
+                            onValueChange = { screenModel.onEvent(CreateNoticeEvent.MessageChanged(it)) },
+                            label = { Text("What do you want to remember?") },
+                            modifier = Modifier.fillMaxWidth(),
+                            minLines = 3,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                    }
                 }
 
-                SectionCard(
-                    icon = painterResource(R.drawable.round_repeat_24),
-                    title = "Frequency"
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 2 }
                 ) {
-                    RepetitionSelector(
-                        selected = state.repetitionType,
-                        customIntervalMinutes = state.customIntervalMinutes,
-                        onSelect = { screenModel.onEvent(CreateNoticeEvent.RepetitionChanged(it)) },
-                        onCustomIntervalChange = { screenModel.onEvent(CreateNoticeEvent.CustomIntervalChanged(it)) }
-                    )
-
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    SectionCard(
+                        icon = painterResource(R.drawable.round_repeat_24),
+                        title = "Frequency"
                     ) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer
-                            ),
-                            shape = MaterialTheme.shapes.small
+                        RepetitionSelector(
+                            selected = state.repetitionType,
+                            customIntervalMinutes = state.customIntervalMinutes,
+                            onSelect = { screenModel.onEvent(CreateNoticeEvent.RepetitionChanged(it)) },
+                            onCustomIntervalChange = { screenModel.onEvent(CreateNoticeEvent.CustomIntervalChanged(it)) }
+                        )
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Icon(
-                                painter = painterResource(R.drawable.round_notifications_24),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .padding(6.dp)
-                                    .size(18.dp),
-                                tint = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                        }
-                        Column {
-                            Text(
-                                text = "First reminder",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = getFirstShownText(
-                                    state.repetitionType,
-                                    state.customIntervalMinutes
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.tertiaryContainer
                                 ),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface,
-                                fontWeight = FontWeight.SemiBold
-                            )
+                                shape = MaterialTheme.shapes.small
+                            ) {
+                                Icon(
+                                    painter = painterResource(R.drawable.round_notifications_24),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .padding(6.dp)
+                                        .size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                            Column {
+                                Text(
+                                    text = "First reminder",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = getFirstShownText(
+                                        state.repetitionType,
+                                        state.customIntervalMinutes
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
                         }
                     }
                 }
@@ -174,7 +190,8 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
                     enabled = state.isValid,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(56.dp),
+                        .height(56.dp)
+                        .bounceClick(),
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Icon(

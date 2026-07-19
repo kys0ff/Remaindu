@@ -6,6 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import cafe.adriel.voyager.navigator.Navigator
+import cafe.adriel.voyager.transitions.SlideTransition
 import off.kys.remaindu.presentation.screen.home.HomeScreen
 import off.kys.remaindu.presentation.theme.RemainduTheme
 
@@ -16,7 +17,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             RemainduTheme {
-                Navigator(screen = HomeScreen())
+                Navigator(screen = HomeScreen()) { navigator ->
+                    SlideTransition(navigator)
+                }
             }
         }
     }

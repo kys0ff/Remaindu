@@ -34,6 +34,8 @@ import androidx.compose.ui.unit.dp
 import off.kys.remaindu.R
 import off.kys.remaindu.domain.model.Notice
 
+import off.kys.remaindu.util.bounceClick
+
 @Composable
 fun NoticeBanner(
     notice: Notice,
@@ -46,7 +48,9 @@ fun NoticeBanner(
         exit = shrinkVertically(animationSpec = tween(150)) + fadeOut(tween(120))
     ) {
         ElevatedCard(
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .bounceClick(),
             shape = MaterialTheme.shapes.large,
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer,

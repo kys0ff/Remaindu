@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Badge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -23,12 +24,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -42,6 +47,7 @@ import off.kys.remaindu.presentation.components.NoticeBanner
 import off.kys.remaindu.presentation.components.NoticeListItem
 import off.kys.remaindu.presentation.components.PermissionRequesterCard
 import off.kys.remaindu.presentation.screen.create.CreateNoticeScreen
+import off.kys.remaindu.util.bounceClick
 
 class HomeScreen : Screen {
 
@@ -52,6 +58,13 @@ class HomeScreen : Screen {
         val screenModel = koinScreenModel<HomeScreenModel>()
         val state by screenModel.state.collectAsState()
         val context = LocalContext.current
+        val lazyListState = rememberLazyListState()
+
+        val isExpanded by remember {
+            derivedStateOf {
+                lazyListState.firstVisibleItemIndex == 0
+            }
+        }
 
         LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
             screenModel.onEvent(HomeEvent.CheckPermissions(context))
@@ -87,6 +100,7 @@ class HomeScreen : Screen {
             },
             floatingActionButton = {
                 ExtendedFloatingActionButton(
+                    expanded = isExpanded,
                     text = { Text("New notice") },
                     icon = {
                         Icon(
@@ -94,7 +108,8 @@ class HomeScreen : Screen {
                             contentDescription = null
                         )
                     },
-                    onClick = { navigator.push(CreateNoticeScreen()) }
+                    onClick = { navigator.push(CreateNoticeScreen()) },
+                    modifier = Modifier.bounceClick()
                 )
             }
         ) { padding ->
@@ -103,6 +118,7 @@ class HomeScreen : Screen {
             }
 
             LazyColumn(
+                state = lazyListState,
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding),
@@ -169,8 +185,8 @@ class HomeScreen : Screen {
     private fun SectionHeader(
         text: String,
         count: Int,
-        color: androidx.compose.ui.graphics.Color,
-        paddingTop: androidx.compose.ui.unit.Dp = 0.dp
+        color: Color,
+        paddingTop: Dp = 0.dp
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

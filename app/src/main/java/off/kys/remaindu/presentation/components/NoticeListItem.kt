@@ -33,6 +33,8 @@ import off.kys.remaindu.R
 import off.kys.remaindu.domain.model.Notice
 import off.kys.remaindu.util.DateTimeUtils
 
+import off.kys.remaindu.util.bounceClick
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NoticeListItem(
@@ -73,7 +75,9 @@ fun NoticeListItem(
         }
     ) {
         ElevatedCard(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .bounceClick(),
             shape = MaterialTheme.shapes.medium,
             colors = CardDefaults.elevatedCardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
