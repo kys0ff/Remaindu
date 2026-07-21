@@ -1,5 +1,7 @@
 package off.kys.remaindu.presentation.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,8 +14,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -24,6 +26,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import off.kys.remaindu.R
 import off.kys.remaindu.domain.model.Notice
 import off.kys.remaindu.util.DateTimeUtils
-
 import off.kys.remaindu.util.bounceClick
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,16 +43,34 @@ fun NoticeListItem(
     notice: Notice,
     onEdit: (Notice) -> Unit,
     onDelete: (Notice) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isResetRequested: Boolean = false
 ) {
     val dismissState = rememberSwipeToDismissBoxState()
 
     LaunchedEffect(dismissState.currentValue) {
         if (dismissState.currentValue == SwipeToDismissBoxValue.EndToStart) {
             onDelete(notice)
+        }
+    }
+
+    LaunchedEffect(isResetRequested) {
+        if (isResetRequested && dismissState.currentValue != SwipeToDismissBoxValue.Settled) {
             dismissState.reset()
         }
     }
+
+    val progress = dismissState.progress.coerceIn(0f, 1f)
+    val isSwiping = dismissState.targetValue == SwipeToDismissBoxValue.EndToStart
+
+    val borderColor by animateColorAsState(
+        targetValue = if (isSwiping && progress > 0.5f) {
+            MaterialTheme.colorScheme.error.copy(alpha = (progress * 0.8f).coerceAtMost(0.8f))
+        } else {
+            MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0f)
+        },
+        label = "BorderColor"
+    )
 
     SwipeToDismissBox(
         state = dismissState,
@@ -58,31 +78,40 @@ fun NoticeListItem(
         enableDismissFromStartToEnd = false,
         enableDismissFromEndToStart = true,
         backgroundContent = {
+            val color = if (isSwiping) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = progress)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(MaterialTheme.shapes.medium)
-                    .background(MaterialTheme.colorScheme.errorContainer)
+                    .background(color)
                     .padding(horizontal = 20.dp),
                 contentAlignment = Alignment.CenterEnd
             ) {
                 Icon(
                     painter = painterResource(R.drawable.round_delete_outline_24),
                     contentDescription = "Delete",
-                    tint = MaterialTheme.colorScheme.onErrorContainer
+                    tint = MaterialTheme.colorScheme.onErrorContainer.copy(alpha = progress)
                 )
             }
         }
     ) {
-        ElevatedCard(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .bounceClick(),
             shape = MaterialTheme.shapes.medium,
-            colors = CardDefaults.elevatedCardColors(
+            colors = CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surface,
             ),
-            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp)
+            elevation = CardDefaults.elevatedCardElevation(defaultElevation = 1.dp),
+            border = BorderStroke(
+                width = (1.dp * progress).coerceAtLeast(0.1.dp),
+                color = borderColor
+            )
         ) {
             Row(
                 modifier = Modifier

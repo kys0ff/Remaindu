@@ -2,17 +2,21 @@ package off.kys.remaindu.presentation.notice
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -25,6 +29,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
@@ -83,18 +88,41 @@ fun NoticeOverlayScreen(
         ) + fadeIn(tween(200)),
         exit = slideOutVertically(
             targetOffsetY = { -it },
-            animationSpec = spring(stiffness = Spring.StiffnessMedium)
-        ) + shrinkVertically(
-            shrinkTowards = Alignment.Top,
-            animationSpec = spring(stiffness = Spring.StiffnessMedium)
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioNoBouncy,
+                stiffness = Spring.StiffnessMedium
+            )
+        ) + scaleOut(
+            targetScale = 0.9f,
+            animationSpec = tween(200, easing = FastOutSlowInEasing)
         ) + fadeOut(tween(150))
     ) {
         val dragOffsetY = remember { Animatable(0f) }
+        val dismissThreshold = -100f
+        val isBeyondThreshold = dragOffsetY.value < dismissThreshold
+
+        val borderColor by animateColorAsState(
+            targetValue = if (isBeyondThreshold) {
+                MaterialTheme.colorScheme.error.copy(alpha = 0.8f)
+            } else {
+                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
+            },
+            label = "BorderColorAnimation"
+        )
+
+        val borderStroke = if (dragOffsetY.value < 0f) {
+            val progress = (dragOffsetY.value.absoluteValue / 150f).coerceIn(0f, 1f)
+            BorderStroke(
+                width = (1.dp + (2.dp * progress)),
+                color = borderColor
+            )
+        } else null
 
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .statusBarsPadding()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.TopCenter
         ) {
             Surface(
@@ -105,34 +133,46 @@ fun NoticeOverlayScreen(
                         translationY = dragOffsetY.value.coerceAtMost(0f)
                         val progress =
                             (dragOffsetY.value.absoluteValue / 300f).coerceIn(0f, 1f)
-                        alpha = 1f - progress * 0.6f
+                        alpha = 1f - progress * 0.4f
+                        scaleX = 1f - progress * 0.05f
+                        scaleY = 1f - progress * 0.05f
                     }
                     .pointerInput(currentNotice.id) {
                         detectVerticalDragGestures(
                             onDragEnd = {
-                                if (dragOffsetY.value < -80f) {
+                                if (dragOffsetY.value < dismissThreshold) {
                                     model.onEvent(NoticeOverlayEvent.RequestDismiss())
                                 } else {
                                     scope.launch {
-                                        dragOffsetY.animateTo(0f)
+                                        dragOffsetY.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
                                     }
+                                }
+                            },
+                            onDragCancel = {
+                                scope.launch {
+                                    dragOffsetY.animateTo(0f, spring(stiffness = Spring.StiffnessMediumLow))
                                 }
                             },
                             onVerticalDrag = { change, delta ->
                                 change.consume()
                                 scope.launch {
-                                    dragOffsetY.snapTo((dragOffsetY.value + delta).coerceAtMost(0f))
+                                    // Apply resistance when dragging up
+                                    val newOffset = dragOffsetY.value + delta
+                                    dragOffsetY.snapTo(newOffset.coerceAtMost(0f))
                                 }
                             }
                         )
                     }
-                    .shadow(elevation = 8.dp, shape = RoundedCornerShape(28.dp))
-                    .clip(RoundedCornerShape(28.dp)),
+                    .shadow(
+                        elevation = if (dragOffsetY.value < 0f) 2.dp else 8.dp,
+                        shape = RoundedCornerShape(28.dp)
+                    ),
                 shape = RoundedCornerShape(28.dp),
                 color = MaterialTheme.colorScheme.surfaceContainerHigh,
-                contentColor = MaterialTheme.colorScheme.onSurface
+                contentColor = MaterialTheme.colorScheme.onSurface,
+                border = borderStroke
             ) {
-                Column {
+                Column(modifier = Modifier.animateContentSize()) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()

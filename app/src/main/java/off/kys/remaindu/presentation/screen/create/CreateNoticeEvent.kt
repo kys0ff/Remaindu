@@ -7,5 +7,6 @@ sealed class CreateNoticeEvent {
     data class MessageChanged(val value: String) : CreateNoticeEvent()
     data class RepetitionChanged(val value: RepetitionType) : CreateNoticeEvent()
     data class CustomIntervalChanged(val value: String) : CreateNoticeEvent()
+    data class OneTimeDelayChanged(val value: String) : CreateNoticeEvent()
     object SaveNotice : CreateNoticeEvent()
 }

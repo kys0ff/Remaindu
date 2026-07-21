@@ -138,8 +138,10 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
                         RepetitionSelector(
                             selected = state.repetitionType,
                             customIntervalMinutes = state.customIntervalMinutes,
+                            oneTimeDelaySeconds = state.oneTimeDelaySeconds,
                             onSelect = { screenModel.onEvent(CreateNoticeEvent.RepetitionChanged(it)) },
-                            onCustomIntervalChange = { screenModel.onEvent(CreateNoticeEvent.CustomIntervalChanged(it)) }
+                            onCustomIntervalChange = { screenModel.onEvent(CreateNoticeEvent.CustomIntervalChanged(it)) },
+                            onOneTimeDelayChange = { screenModel.onEvent(CreateNoticeEvent.OneTimeDelayChanged(it)) }
                         )
 
                         Row(
@@ -173,7 +175,8 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
                                 Text(
                                     text = getFirstShownText(
                                         state.repetitionType,
-                                        state.customIntervalMinutes
+                                        state.customIntervalMinutes,
+                                        state.oneTimeDelaySeconds
                                     ),
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurface,
@@ -252,9 +255,22 @@ class CreateNoticeScreen(private val noticeId: Long? = null) : Screen {
         }
     }
 
-    private fun getFirstShownText(type: RepetitionType, customMinutes: String): String {
+    private fun getFirstShownText(
+        type: RepetitionType,
+        customMinutes: String,
+        oneTimeDelaySeconds: String
+    ): String {
         return when (type) {
-            RepetitionType.ONCE -> "In 10 seconds"
+            RepetitionType.ONCE -> {
+                val secs = oneTimeDelaySeconds.toLongOrNull() ?: 10L
+                when {
+                    secs < 60 -> "In $secs seconds"
+                    secs % 3600 == 0L -> "In ${secs / 3600} hours"
+                    secs % 60 == 0L -> "In ${secs / 60} minutes"
+                    else -> "In ${secs / 60}m ${secs % 60}s"
+                }
+            }
+
             RepetitionType.HOURLY -> "In 1 hour"
             RepetitionType.DAILY -> "In 1 day"
             RepetitionType.WEEKLY -> "In 1 week"

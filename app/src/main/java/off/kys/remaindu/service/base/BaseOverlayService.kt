@@ -101,7 +101,6 @@ abstract class BaseOverlayService : Service(), LifecycleOwner, ViewModelStoreOwn
             PixelFormat.TRANSLUCENT
         ).apply {
             gravity = Gravity.CENTER_HORIZONTAL or Gravity.TOP
-            y = 64
             setupLayoutParams(this)
         }
 

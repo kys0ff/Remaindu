@@ -38,6 +38,7 @@ class CreateNoticeScreenModel(
         is CreateNoticeEvent.MessageChanged -> updateState { it.copy(message = event.value) }
         is CreateNoticeEvent.RepetitionChanged -> updateState { it.copy(repetitionType = event.value) }
         is CreateNoticeEvent.CustomIntervalChanged -> updateState { it.copy(customIntervalMinutes = event.value) }
+        is CreateNoticeEvent.OneTimeDelayChanged -> updateState { it.copy(oneTimeDelaySeconds = event.value) }
         CreateNoticeEvent.SaveNotice -> save()
     }
 
@@ -47,7 +48,8 @@ class CreateNoticeScreenModel(
         screenModelScope.launch {
             val now = System.currentTimeMillis()
             val nextTrigger = if (current.repetitionType == RepetitionType.ONCE) {
-                now + 10_000L
+                val delayMillis = (current.oneTimeDelaySeconds.toLongOrNull() ?: 10L) * 1000L
+                now + delayMillis
             } else {
                 DateTimeUtils.nextTrigger(
                     from = now,

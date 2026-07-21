@@ -8,6 +8,7 @@ data class CreateNoticeUiState(
     val message: String = "",
     val repetitionType: RepetitionType = RepetitionType.ONCE,
     val customIntervalMinutes: String = "60",
+    val oneTimeDelaySeconds: String = "10",
     val isEditing: Boolean = false,
     val createdAt: Long = 0
 ) {

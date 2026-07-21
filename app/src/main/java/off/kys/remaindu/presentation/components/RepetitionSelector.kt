@@ -69,12 +69,23 @@ private val quickIntervals = listOf(
     1440 to "1d"
 )
 
+private val quickOneTimeDelays = listOf(
+    10 to "10s",
+    30 to "30s",
+    60 to "1m",
+    300 to "5m",
+    600 to "10m",
+    3600 to "1h"
+)
+
 @Composable
 fun RepetitionSelector(
     selected: RepetitionType,
     customIntervalMinutes: String,
+    oneTimeDelaySeconds: String,
     onSelect: (RepetitionType) -> Unit,
     onCustomIntervalChange: (String) -> Unit,
+    onOneTimeDelayChange: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier = modifier) {
@@ -99,6 +110,17 @@ fun RepetitionSelector(
                     Spacer(Modifier.weight(1f))
                 }
             }
+        }
+
+        AnimatedVisibility(
+            visible = selected == RepetitionType.ONCE,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            OneTimeDelayPicker(
+                seconds = oneTimeDelaySeconds,
+                onSecondsChange = onOneTimeDelayChange
+            )
         }
 
         AnimatedVisibility(
@@ -193,6 +215,95 @@ private fun RepetitionOptionCard(
                         tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun OneTimeDelayPicker(
+    seconds: String,
+    onSecondsChange: (String) -> Unit
+) {
+    val currentSeconds = seconds.toIntOrNull()?.coerceAtLeast(1) ?: 10
+
+    Column(modifier = Modifier.padding(top = 4.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            IconButton(
+                onClick = {
+                    val step = if (currentSeconds <= 60) 5 else 30
+                    val next = (currentSeconds - step).coerceAtLeast(1)
+                    onSecondsChange(next.toString())
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.round_remove_24),
+                    contentDescription = "Decrease"
+                )
+            }
+
+            OutlinedTextField(
+                value = seconds,
+                onValueChange = { if (it.all(Char::isDigit)) onSecondsChange(it) },
+                label = { Text("Delay (seconds)") },
+                supportingText = { Text(formatSecondsHint(currentSeconds.toLong())) },
+                modifier = Modifier.weight(1f),
+                singleLine = true,
+                shape = MaterialTheme.shapes.medium
+            )
+
+            IconButton(
+                onClick = {
+                    val step = if (currentSeconds < 60) 5 else 30
+                    val next = currentSeconds + step
+                    onSecondsChange(next.toString())
+                },
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.round_add_24),
+                    contentDescription = "Increase"
+                )
+            }
+        }
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            quickOneTimeDelays.forEach { (secs, label) ->
+                val isActive = seconds == secs.toString()
+                AssistChip(
+                    onClick = { onSecondsChange(secs.toString()) },
+                    label = { Text(label, style = MaterialTheme.typography.labelMedium) },
+                    colors = AssistChipDefaults.assistChipColors(
+                        containerColor = if (isActive)
+                            MaterialTheme.colorScheme.secondaryContainer
+                        else
+                            MaterialTheme.colorScheme.surfaceContainerHigh,
+                        labelColor = if (isActive)
+                            MaterialTheme.colorScheme.onSecondaryContainer
+                        else
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                    ),
+                    border = null,
+                    shape = MaterialTheme.shapes.small
+                )
             }
         }
     }
@@ -330,5 +441,24 @@ private fun formatMinutesHint(mins: Long): String = when {
         val hours = mins / 60
         val rem = mins % 60
         "Repeats every ${hours}h ${rem}m"
+    }
+}
+
+private fun formatSecondsHint(secs: Long): String = when {
+    secs < 60 -> "Triggers in $secs second${if (secs == 1L) "" else "s"}"
+    secs % 3600 == 0L -> {
+        val hours = secs / 3600
+        "Triggers in $hours hour${if (hours == 1L) "" else "s"}"
+    }
+
+    secs % 60 == 0L -> {
+        val mins = secs / 60
+        "Triggers in $mins minute${if (mins == 1L) "" else "s"}"
+    }
+
+    else -> {
+        val mins = secs / 60
+        val rem = secs % 60
+        "Triggers in ${mins}m ${rem}s"
     }
 }

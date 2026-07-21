@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
@@ -34,9 +35,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
@@ -63,6 +66,7 @@ class HomeScreen : Screen {
         val state by screenModel.state.collectAsState()
         val context = LocalContext.current
         val lazyListState = rememberLazyListState()
+        val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
         val isExpanded by remember {
             derivedStateOf {
@@ -110,8 +114,10 @@ class HomeScreen : Screen {
         }
 
         Scaffold(
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 LargeTopAppBar(
+                    scrollBehavior = scrollBehavior,
                     title = {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -122,7 +128,11 @@ class HomeScreen : Screen {
                                     tint = MaterialTheme.colorScheme.primary
                                 )
                                 Spacer(Modifier.width(10.dp))
-                                Text("Remaindu")
+                                Text(
+                                    "Remaindu",
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                             if (state.dueNotices.isNotEmpty()) {
                                 Text(
@@ -130,7 +140,9 @@ class HomeScreen : Screen {
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.error,
                                     fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(start = 40.dp)
+                                    modifier = Modifier.padding(start = 40.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
                                 )
                             }
                         }
@@ -212,7 +224,8 @@ class HomeScreen : Screen {
                             notice = notice,
                             onEdit = { navigator.push(CreateNoticeScreen(it.id)) },
                             onDelete = { screenModel.onEvent(HomeEvent.RequestDeleteNotice(it)) },
-                            modifier = Modifier.animateItem()
+                            modifier = Modifier.animateItem(),
+                            isResetRequested = state.noticeToDelete == null
                         )
                     }
                 }
