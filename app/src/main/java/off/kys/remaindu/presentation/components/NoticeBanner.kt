@@ -1,11 +1,13 @@
 package off.kys.remaindu.presentation.components
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,17 +40,28 @@ import off.kys.remaindu.util.bounceClick
 
 @Composable
 fun NoticeBanner(
+    modifier: Modifier = Modifier,
     notice: Notice,
-    onAcknowledge: (Notice) -> Unit,
-    modifier: Modifier = Modifier
+    visible: Boolean = true,
+    onAcknowledge: (Notice) -> Unit
 ) {
     AnimatedVisibility(
-        visible = true,
-        enter = slideInVertically(animationSpec = tween(FastDuration)) { -it / 2 } + fadeIn(tween(FastDuration)),
-        exit = shrinkVertically(animationSpec = tween(FastDuration)) + fadeOut(tween(FastDuration))
+        visible = visible,
+        enter = slideInVertically(
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioLowBouncy,
+                stiffness = Spring.StiffnessMediumLow
+            ),
+            initialOffsetY = { -it }
+        ) + fadeIn(animationSpec = tween(FastDuration)),
+        exit = slideOutVertically(
+            animationSpec = tween(durationMillis = FastDuration),
+            targetOffsetY = { -it }
+        ) + fadeOut(animationSpec = tween(durationMillis = FastDuration)),
+        modifier = modifier
     ) {
         ElevatedCard(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .bounceClick(),
             shape = MaterialTheme.shapes.large,
@@ -72,7 +85,7 @@ fun NoticeBanner(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        painterResource(R.drawable.round_notifications_active_24),
+                        painter = painterResource(R.drawable.round_notifications_active_24),
                         contentDescription = null,
                         modifier = Modifier.size(22.dp),
                         tint = MaterialTheme.colorScheme.onPrimaryContainer
@@ -82,14 +95,12 @@ fun NoticeBanner(
                 Spacer(Modifier.width(12.dp))
 
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "DUE NOW",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                        )
-                    }
+                    Text(
+                        text = "DUE NOW",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                    )
                     Text(
                         text = notice.title,
                         style = MaterialTheme.typography.titleMedium,
@@ -117,7 +128,7 @@ fun NoticeBanner(
                     )
                 ) {
                     Icon(
-                        painterResource(R.drawable.round_check_24),
+                        painter = painterResource(R.drawable.round_check_24),
                         contentDescription = "Mark as read"
                     )
                 }
