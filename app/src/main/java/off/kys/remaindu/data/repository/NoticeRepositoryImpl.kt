@@ -22,6 +22,9 @@ class NoticeRepositoryImpl(
     override fun observeDue(): Flow<List<Notice>> =
         dao.observeDue(System.currentTimeMillis()).map { list -> list.map { it.toDomain() } }
 
+    override suspend fun getDueNotices(): List<Notice> =
+        dao.getDueOnce(System.currentTimeMillis()).map { it.toDomain() }
+
     override suspend fun getById(id: Long): Notice? =
         dao.getById(id)?.toDomain()
 

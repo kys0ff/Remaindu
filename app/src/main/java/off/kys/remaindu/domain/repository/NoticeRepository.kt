@@ -6,6 +6,7 @@ import off.kys.remaindu.domain.model.Notice
 interface NoticeRepository {
     fun observeAll(): Flow<List<Notice>>
     fun observeDue(): Flow<List<Notice>>
+    suspend fun getDueNotices(): List<Notice>
     suspend fun getById(id: Long): Notice?
     suspend fun add(notice: Notice): Long
     suspend fun update(notice: Notice)

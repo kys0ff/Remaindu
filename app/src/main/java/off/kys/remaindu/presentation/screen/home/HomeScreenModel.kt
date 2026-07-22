@@ -11,12 +11,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import off.kys.remaindu.domain.model.Notice
+import off.kys.remaindu.domain.repository.SettingsRepository
 import off.kys.remaindu.domain.usecase.NoticeUseCases
 import off.kys.remaindu.presentation.core.BaseScreenModel
+import off.kys.remaindu.util.DndManager
 import kotlin.time.Duration.Companion.milliseconds
 
 class HomeScreenModel(
-    private val useCases: NoticeUseCases
+    private val useCases: NoticeUseCases,
+    private val settingsRepository: SettingsRepository,
+    private val dndManager: DndManager
 ) : BaseScreenModel<HomeUiState, HomeEvent, HomeEffect>(HomeUiState()) {
 
     private val ticker = flow {
@@ -30,14 +34,16 @@ class HomeScreenModel(
         screenModelScope.launch {
             combine(
                 useCases.observeNotices(),
+                settingsRepository.observeDndSettings(),
                 ticker
-            ) { all, now ->
+            ) { all, dnd, now ->
                 val due = all.filter { it.isActive && it.nextTriggerAt <= now }
 
                 updateState { current ->
                     current.copy(
                         dueNotices = due.sortedByDescending { it.nextTriggerAt }.toPersistentList(),
                         allNotices = all.sortedBy { it.nextTriggerAt }.toPersistentList(),
+                        dndSettings = dnd,
                         isLoading = false
                     )
                 }
@@ -51,6 +57,23 @@ class HomeScreenModel(
         is HomeEvent.DeleteNotice -> delete(event.notice)
         HomeEvent.DismissDeleteConfirmation -> updateState { it.copy(noticeToDelete = null) }
         is HomeEvent.CheckPermissions -> checkPermissions(event.context)
+        is HomeEvent.ToggleDndOptions -> updateState { it.copy(showDndOptions = event.show, selectedDndDuration = null) }
+        is HomeEvent.SelectDndDuration -> updateState { it.copy(selectedDndDuration = event.durationMinutes) }
+        is HomeEvent.SetDnd -> setDnd(event.durationMinutes)
+        HomeEvent.DisableDnd -> disableDnd()
+    }
+
+    private fun setDnd(minutes: Int?) {
+        screenModelScope.launch {
+            dndManager.enableDnd(minutes)
+            updateState { it.copy(showDndOptions = false) }
+        }
+    }
+
+    private fun disableDnd() {
+        screenModelScope.launch {
+            dndManager.disableDnd()
+        }
     }
 
     private fun checkPermissions(context: Context) {

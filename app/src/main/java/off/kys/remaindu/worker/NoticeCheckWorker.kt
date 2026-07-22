@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import off.kys.remaindu.data.local.RemainduDatabase
+import off.kys.remaindu.data.repository.SettingsRepositoryImpl
 import off.kys.remaindu.service.ReminderFloatingWindow
 
 /** Periodically checks for notices that became due in the background and
@@ -14,6 +15,11 @@ class NoticeCheckWorker(
 ) : CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        val settingsRepository = SettingsRepositoryImpl(applicationContext)
+        if (settingsRepository.getDndSettings().isCurrentlyActive) {
+            return Result.success()
+        }
+
         val dao = RemainduDatabase.getInstance(applicationContext).noticeDao()
         val due = dao.getDueOnce(System.currentTimeMillis())
         due.forEach { notice ->
